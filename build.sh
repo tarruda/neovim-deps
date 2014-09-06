@@ -75,7 +75,7 @@ popd
 
 rm -rf neovim
 
-cp color_terminal.lua share/lua/*/busted/output
-cp color_terminal.lua 32/share/lua/*/busted/output
+cp color_terminal.lua share/lua/*/busted/outputHandlers
+cp color_terminal.lua 32/share/lua/*/busted/outputHandlers
 
 git add .
