@@ -27,8 +27,9 @@ local tostring = tostring
 local type = type
 local char = require'string'.char
 local floor = require'math'.floor
-local frexp = require'math'.frexp
-local ldexp = require'math'.ldexp
+local tointeger = require'math'.tointeger or floor
+local frexp = require'math'.frexp or require'mathx'.frexp
+local ldexp = require'math'.ldexp or require'mathx'.ldexp
 local huge = require'math'.huge
 local tconcat = require'table'.concat
 
@@ -481,10 +482,10 @@ end
 m.set_number = set_number
 
 for k = 0, 4 do
-    local n = 2^k
+    local n = tointeger(2^k)
     local fixext = 0xD4 + k
-    packers['fixext' .. n] = function (buffer, tag, data)
-        assert(#data == n, "bad length for fixext" .. n)
+    packers['fixext' .. tostring(n)] = function (buffer, tag, data)
+        assert(#data == n, "bad length for fixext" .. tostring(n))
         buffer[#buffer+1] = char(fixext,
                                  tag < 0 and tag + 0x100 or tag)
         buffer[#buffer+1] = data
@@ -568,7 +569,7 @@ local types_map = setmetatable({
         elseif k > 0xDF then
             return 'fixnum_neg'
         else
-            return 'reserved' .. k
+            return 'reserved' .. tostring(k)
         end
 end })
 m.types_map = types_map
@@ -927,8 +928,8 @@ function m.build_ext (tag, data)
 end
 
 for k = 0, 4 do
-    local n = 2^k
-    unpackers['fixext' .. n] = function (c)
+    local n = tointeger(2^k)
+    unpackers['fixext' .. tostring(n)] = function (c)
         local s, i, j = c.s, c.i, c.j
         if i > j then
             c:underflow(i)
@@ -1062,12 +1063,15 @@ local function cursor_loader (ld)
     }
 end
 
-function m.unpack (s)
+function m.unpack (s, ignore_extra)
     checktype('unpack', 1, s, 'string')
     local cursor = cursor_string(s)
     local data = unpackers['any'](cursor)
+    if ignore_extra then
+      return data, cursor.i
+    end
     if cursor.i < cursor.j then
-        error "extra bytes"
+      error "extra bytes"
     end
     return data
 end
